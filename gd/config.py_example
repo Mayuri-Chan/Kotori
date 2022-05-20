@@ -1,0 +1,8 @@
+class Config(object):
+	BOT_TOKEN = "1938:ATN3Jys-qpoWCa" # from BotFather
+	DB_URL = "postgresql://postgres:password@localhost:5432/db"
+	chat_id = -100012345 # your group chat id
+	chat_url = "https://t.me/wulan17" # your group link
+	app_url = "https://myapp.herokuapp.com/" # your application link
+	owner_id = 123456 # your telegram user id
+	owner_alias = "tsuki17"

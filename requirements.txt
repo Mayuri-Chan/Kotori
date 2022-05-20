@@ -1,0 +1,7 @@
+bottle
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+psycopg2
+python-telegram-bot==13.11
+sqlalchemy
