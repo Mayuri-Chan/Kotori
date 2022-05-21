@@ -275,6 +275,14 @@ def mirrorgd(update, context):
 		return message.reply_text("File id required!")
 	asyncio.run(gen_file(update,context))
 
+def donate(update, context):
+	message = update.effective_message
+	text = "Thanks for the support :)"
+	btn = InlineKeyboardMarkup([
+		[InlineKeyboardButton(text="Click here to donate", url="https://t.me/wulan17/4")]
+		])
+	message.reply_text(text, reply_markup=btn)
+
 start_handler = CommandHandler('start', bot_start, pass_args=True)
 help_handler = CommandHandler('help', bot_help)
 ck_handle = CommandHandler('ck', create_secret, filters=Filters.chat(def_chat_id))

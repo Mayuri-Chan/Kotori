@@ -230,5 +230,10 @@ def delete():
 	response.status = 303
 	response.set_header('Location', "files?user_id={}".format(user_id))
 
+@route('/donate', method="GET")
+def donate():
+	response.status = 303
+	response.set_header('Location', "https://t.me/wulan17/4")
+
 if __name__ == "__main__":
 	run(host='0.0.0.0', port=os.environ.get('PORT', '5000'))
