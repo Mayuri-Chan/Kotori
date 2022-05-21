@@ -102,6 +102,16 @@ def files():
 	user_id = request.params.user_id
 	user_status = db.check_user(user_id)
 	user_name = user_status.user_name
+	file_owner = False
+	bot_owner = False
+	if request.get_cookie('secret'):
+		secret = request.get_cookie('secret')
+		user_data = validate_secret(secret)
+		if user_data['status'] == 0:
+			response.set_cookie('secret', '')
+		file_owner = True
+		if user_data['user_id'] == OWNER:
+			bot_owner = True
 	if not user_id:
 		response.set_header('Content-Type', 'application/json')
 		return {"status": False, "reason": "user_id required!"}
@@ -115,11 +125,27 @@ def files():
 	if data_count == 0:
 		response.set_header('Content-Type', 'application/json')
 		return {"status": False, "reason": "No files found!"}
-	text = '<table width="100%" border=1><tr><th colspan="4">Files uploaded by <a href="https://t.me/{}">@{}</a></tr><tr><th>No</th><th>Filename</th><th>Download</th><th>Upload Date</th></tr>'.format(user_name,user_name)
+	text = '<table width="100%" border=1><tr>'
+	if file_owner or bot_owner:
+		text += '<th colspan="4">'
+	else:
+		text += '<th colspan="3">'
+	text += 'Files uploaded by <a href="https://t.me/{}">@{}</a></th><th>'.format(user_name,user_name)
+	if request.get_cookie('secret'):
+		text += '<a href="logout?user_id={}">Logout</a>'.format(user_id)
+	else:
+		text += '<a href="login?user_id={}">Login</a>'.format(user_id)
+	text += '</th></tr><tr><th>No</th><th>Filename</th><th>Download</th>'
+	if file_owner or bot_owner:
+		text += '<th>Delete</th>'
+	text += '<th>Upload Date</th></tr>'
 	n = 1
 	data = data_db.get_data(user_id,limit,offset)
 	for x in data:
-		text += "<tr><td style='text-align:center;'>{}</td><td style='text-align:center;'>{}</td><td style='text-align:center;'><a href='https://drive.google.com/file/d/{}?view'>Google Drive</a> | <a href='{}/download?id={}'>Direct</a></td><td style='text-align:center;'>{}</td></tr>".format(n,x.file_name,x.file_id,app_url,x.file_id,datetime.fromtimestamp(x.time))
+		text += "<tr><td style='text-align:center;'>{}</td><td style='text-align:center;'>{}</td><td style='text-align:center;'><a href='https://drive.google.com/file/d/{}?view'>Google Drive</a> | <a href='{}/download?id={}'>Direct</a></td>".format(n,x.file_name,x.file_id,app_url,x.file_id)
+		if file_owner or bot_owner:
+			text += "<td style='text-align:center;'><a href='delete?id={}&user_id={}'>Delete</a></td>".format(x.file_id,user_id)
+		text += "<td style='text-align:center;'>{}</td></tr>".format(datetime.fromtimestamp(x.time))
 		n = n+1
 	text += "</table>"
 	if data_count > limit:
@@ -152,6 +178,57 @@ def download():
 		return static_file(filename, root="files", download=filename)
 	gen_url = "https://t.me/{}?start=gen_{}".format(bot.getMe().username,file_id)
 	return "<h1>Link expired!</h1><br /><a href='{}'>click here</a> to regenerate".format(gen_url)
+
+@route('/login', method=["POST","GET"])
+def login():
+	user_id = request.params.user_id
+	secret = request.params.secret
+	if secret:
+		user_data = validate_secret(secret)
+		if user_data['status'] == 1:
+			response.set_cookie('secret', secret)
+			response.status = 303
+			return response.set_header('Location', "files?user_id={}".format(user_id))
+		response.set_header('Content-Type', 'application/json')
+		return {"status": False, "reason": "Secret not found!"}
+	text = "<form action='login?user_id={}' method='POST'>".format(user_id)
+	text += "<table>"
+	text += "<tr><td><input type='text' name='secret' placeholder='Secret' /></td><td style='text-align:center;' colspan='3'><input type='submit' value='Login' /></td></tr>"
+	text += "</table></form>"
+	return text
+
+@route('/logout', method=["POST","GET"])
+def logout():
+	user_id = request.params.user_id
+	response.set_cookie('secret', '')
+	response.status = 303
+	return response.set_header('Location', "files?user_id={}".format(user_id))
+
+@route('/delete', method="GET")
+def delete():
+	user_id = request.params.user_id
+	file_id = request.params.id
+	secret = request.get_cookie('secret')
+	if not file_id:
+		response.set_header('Content-Type', 'application/json')
+		return {"status": False, "reason": "File id required!"}
+	if not secret:
+		response.set_header('Content-Type', 'application/json')
+		return {"status": False, "reason": "You need to login first!"}
+	user_data = validate_secret(secret)
+	if not user_data:
+		response.status = 303
+		return response.set_header('Location', "files?user_id={}".format(user_id))
+	if user_data['user_id'] != user_id and user_data['user_id'] != OWNER:
+		response.set_header('Content-Type', 'application/json')
+		return {"status": False, "reason": "You don't have permission to delete this file!"}
+	try:
+		gd_service.files().delete(fileId=file_id).execute()
+	except errors.HttpError as err:
+		print(err)
+	data_db.delete_from_gddata(file_id)
+	response.status = 303
+	response.set_header('Location', "files?user_id={}".format(user_id))
 
 if __name__ == "__main__":
 	run(host='0.0.0.0', port=os.environ.get('PORT', '5000'))
