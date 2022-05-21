@@ -7,21 +7,9 @@ import json
 from bottle import abort, request, route, run, static_file, error, response
 from datetime import datetime
 from gd import OWNER, app_url, chat_url, def_chat_id, gd_service, owner_alias, user_db as db, data_db
-from gd.bot import bot, send_text
-from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
+from gd.bot import bot, humanbytes, send_text
+from googleapiclient.http import MediaFileUpload
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
-
-def humanbytes(size: int) -> str:
-	if size is None or isinstance(size, str):
-		return ""
-
-	power = 2**10
-	raised_to_pow = 0
-	dict_power_n = {0: "", 1: "Ki", 2: "Mi", 3: "Gi", 4: "Ti"}
-	while size > power:
-		size /= power
-		raised_to_pow += 1
-	return str(round(size, 2)) + " " + dict_power_n[raised_to_pow] + "B"
 
 def validate_secret(secret):
 	data = db.get_data(secret)
@@ -94,16 +82,18 @@ def upload_gd():
 		gd_service.permissions().create(fileId=file_id, body=permission).execute()
 
 		if secret_status['user_id'] == OWNER:
-			text = "File Name: {}\nSize: {}\n\nUploaded by: [{}](tg://user?id={})".format(filename,file_size,secret_status['user_name'],secret_status['user_id'])
+			text = "File Name: {}\nSize: {}\n\nUploaded by: <a href='tg://user?id={}'>{}</a>".format(filename,file_size,secret_status['user_id'],secret_status['user_name'])
 		else:
 			text = "File Name: {}\nSize: {}\n\nUploaded by: @{}".format(filename,file_size,secret_status['user_name'])
 		file_link = "https://drive.google.com/file/d/{}/view".format(file_id)
 		index_link = "{}/files?user_id={}".format(app_url,secret_status['user_id'])
+		direct_link = "{}/download?id={}".format(app_url,file_id)
 		btn = InlineKeyboardMarkup([
-			[InlineKeyboardButton(text="⬇️Download", url=file_link), InlineKeyboardButton(text="☁️Index", url=index_link)]
+			[InlineKeyboardButton(text="⬇️Download", url=file_link), InlineKeyboardButton(text="⬇️Direct", url=direct_link)],
+			[InlineKeyboardButton(text="☁️Index", url=index_link)]
 			])
 		send_text(chat_id, text, btn, pin)
-		os.remove(file_path)
+		os.rename(file_path,"files/{}".format(document.filename))
 		data_db.add_to_gddata(secret_status['user_id'],file_id,filename,time.time())
 		return {"status": True, "file_name": filename, "file_size": file_size, "file_link": file_link}
 
@@ -125,11 +115,11 @@ def files():
 	if data_count == 0:
 		response.set_header('Content-Type', 'application/json')
 		return {"status": False, "reason": "No files found!"}
-	text = '<table width="100%" border=1><tr><th colspan="4">Files uploaded by <a href="https://t.me/{}">@{}</a></tr><tr><th>No</th><th>Filename</th><th>File Link</th><th>Upload Date</th></tr>'.format(user_name,user_name)
+	text = '<table width="100%" border=1><tr><th colspan="4">Files uploaded by <a href="https://t.me/{}">@{}</a></tr><tr><th>No</th><th>Filename</th><th>Download</th><th>Upload Date</th></tr>'.format(user_name,user_name)
 	n = 1
 	data = data_db.get_data(user_id,limit,offset)
 	for x in data:
-		text += "<tr><td>{}</td><td>{}</td><td><a href='https://drive.google.com/file/d/{}?view'>https://drive.google.com/file/d/{}?view</a></td><td>{}</td></tr>".format(n,x.file_name,x.file_id,x.file_id,datetime.fromtimestamp(x.time))
+		text += "<tr><td style='text-align:center;'>{}</td><td style='text-align:center;'>{}</td><td style='text-align:center;'><a href='https://drive.google.com/file/d/{}?view'>Google Drive</a> | <a href='{}/download?id={}'>Direct</a></td><td style='text-align:center;'>{}</td></tr>".format(n,x.file_name,x.file_id,app_url,x.file_id,datetime.fromtimestamp(x.time))
 		n = n+1
 	text += "</table>"
 	if data_count > limit:
@@ -150,6 +140,18 @@ def files():
 			text += " <a href='/files?user_id={}&page={}'>></a> |".format(user_id,page+1)
 			text += " <a href='/files?user_id={}&page={}'>>></a>".format(user_id,max_page)
 	return text
+
+@route('/download', method="GET")
+def download():
+	file_id = request.params.id
+	file_data = data_db.get_file(file_id)
+	if not file_data:
+		return {"status": False, "reason": "File not found!"}
+	filename = file_data[0].file_name
+	if os.path.exists("files/"+filename):
+		return static_file(filename, root="files", download=filename)
+	gen_url = "https://t.me/{}?start=gen_{}".format(bot.getMe().username,file_id)
+	return "<h1>Link expired!</h1><br /><a href='{}'>click here</a> to regenerate".format(gen_url)
 
 if __name__ == "__main__":
 	run(host='0.0.0.0', port=os.environ.get('PORT', '5000'))

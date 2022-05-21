@@ -35,3 +35,9 @@ def get_data(user_id,lim,offs):
 
 def count_data(user_id):
 	return len(SESSION.query(GDData).filter(GDData.user_id==user_id).all())
+
+def get_file(file_id):
+	try:
+		return SESSION.query(GDData).filter(GDData.file_id == file_id).all()
+	finally:
+		SESSION.close()
