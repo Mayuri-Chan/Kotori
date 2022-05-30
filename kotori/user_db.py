@@ -1,6 +1,6 @@
 import threading
 
-from gd import BASE, SESSION
+from kotori import BASE, SESSION
 from sqlalchemy import Column, BigInteger, Integer, String, UnicodeText
 
 class Users(BASE):

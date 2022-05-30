@@ -1,1 +1,1 @@
-web: python3 -m gd
+web: python3 -m kotori

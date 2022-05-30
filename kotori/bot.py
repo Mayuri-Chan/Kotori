@@ -5,7 +5,7 @@ import math
 import telegram
 import time
 
-from gd import BOT_TOKEN, OWNER, app_url, chat_url, def_chat_id, gd_service, owner_alias, user_db as db, data_db
+from kotori import BOT_TOKEN, OWNER, app_url, chat_url, def_chat_id, gd_service, owner_alias, user_db as db, data_db
 from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton, ParseMode
 from telegram.ext import CommandHandler, Filters, MessageHandler, Updater

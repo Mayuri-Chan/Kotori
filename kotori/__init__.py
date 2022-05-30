@@ -1,7 +1,7 @@
 import os
 import pickle
 
-from gd.config import Config
+from kotori.config import Config
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request

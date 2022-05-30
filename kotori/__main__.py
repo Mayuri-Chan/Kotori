@@ -6,8 +6,8 @@ import json
 
 from bottle import abort, request, route, run, static_file, error, response
 from datetime import datetime
-from gd import OWNER, app_url, chat_url, def_chat_id, gd_service, owner_alias, user_db as db, data_db
-from gd.bot import bot, humanbytes, send_text
+from kotori import OWNER, app_url, chat_url, def_chat_id, gd_service, owner_alias, user_db as db, data_db
+from kotori.bot import bot, humanbytes, send_text
 from googleapiclient.http import MediaFileUpload
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 
