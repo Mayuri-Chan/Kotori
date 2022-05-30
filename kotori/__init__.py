@@ -2,6 +2,7 @@ import os
 import pickle
 
 from kotori.config import Config
+
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
@@ -16,6 +17,7 @@ app_url = Config.app_url
 OWNER = Config.owner_id
 owner_alias = Config.owner_alias
 DB_URL = Config.DB_URL
+folder_id = Config.folder_id
 
 # Postgresql
 def mulaisql() -> scoped_session:

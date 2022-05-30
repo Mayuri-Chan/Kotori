@@ -41,3 +41,24 @@ def get_file(file_id):
 		return SESSION.query(GDData).filter(GDData.file_id == file_id).all()
 	finally:
 		SESSION.close()
+
+def delete_from_gddata(file_id):
+	data = get_file(file_id)
+	if data:
+		for x in data:
+			SESSION.delete(x)
+			SESSION.commit()
+		return True
+	return False
+
+def get_all():
+        try:
+                return SESSION.query(GDData).all()
+        finally:
+                SESSION.close()
+
+def check_file(file_name):
+	try:
+		return SESSION.query(GDData).filter(GDData.file_name == file_name).all()
+	finally:
+		SESSION.close()

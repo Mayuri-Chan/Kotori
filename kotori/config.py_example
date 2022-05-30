@@ -6,3 +6,4 @@ class Config(object):
 	app_url = "https://myapp.herokuapp.com/" # your application link
 	owner_id = 123456 # your telegram user id
 	owner_alias = "tsuki17"
+	folder_id = "" # google drive folder_id
