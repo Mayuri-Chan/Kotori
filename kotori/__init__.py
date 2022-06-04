@@ -18,6 +18,9 @@ OWNER = Config.owner_id
 owner_alias = Config.owner_alias
 DB_URL = Config.DB_URL
 folder_id = Config.folder_id
+use_ssl = Config.use_ssl
+ssl_cert = Config.ssl_cert
+ssl_key = Config.ssl_key
 
 # Postgresql
 def mulaisql() -> scoped_session:

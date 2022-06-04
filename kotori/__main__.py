@@ -3,7 +3,7 @@ import kotori
 import os
 
 from bottle import route, run, response, ServerAdapter, static_file
-from kotori import chat_url
+from kotori import chat_url, ssl_cert, ssl_key, use_ssl
 from kotori.web_modules import ALL_MODULES
 
 IMPORTED = {}
@@ -32,6 +32,16 @@ class CherootAdapter(ServerAdapter):
 		from cheroot import wsgi
 
 		server = wsgi.Server((self.host, self.port), handler)
+		if use_ssl:
+			from cheroot.ssl.builtin import BuiltinSSLAdapter
+			import ssl
+
+			server.ssl_adapter = BuiltinSSLAdapter(ssl_cert, ssl_key)
+
+			# By default, the server will allow negotiations with extremely old protocols
+			# that are susceptible to attacks, so we only allow TLSv1.2
+			server.ssl_adapter.context.options |= ssl.OP_NO_TLSv1
+			server.ssl_adapter.context.options |= ssl.OP_NO_TLSv1_1
 
 		try:
 			server.start()
