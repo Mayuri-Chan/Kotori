@@ -2,7 +2,7 @@ import importlib
 import kotori
 import os
 
-from bottle import route, run, response, static_file
+from bottle import route, run, response, ServerAdapter, static_file
 from kotori import chat_url
 from kotori.web_modules import ALL_MODULES
 
@@ -27,6 +27,17 @@ def favicon():
 	filename = "favicon.ico"
 	return static_file(filename, root="img", download=filename)
 
+class CherootAdapter(ServerAdapter):
+	def run(self, handler):
+		from cheroot import wsgi
+
+		server = wsgi.Server((self.host, self.port), handler)
+
+		try:
+			server.start()
+		finally:
+			server.stop()
+
 print("----------------------------------------------------------------")
 print(" Loaded Web Modules : ["+", ".join(ALL_MODULES)+"]")
 print("----------------------------------------------------------------")
@@ -37,4 +48,4 @@ print(" Thanks for using my bot :)")
 print()
 
 if __name__ == "__main__":
-	run(host='0.0.0.0', port=os.environ.get('PORT', '5000'))
+	run(host='0.0.0.0', port=os.environ.get('PORT', '5000'), server=CherootAdapter)
