@@ -21,6 +21,7 @@ folder_id = Config.folder_id
 use_ssl = Config.use_ssl
 ssl_cert = Config.ssl_cert
 ssl_key = Config.ssl_key
+enable_ipv6 = Config.enable_ipv6
 
 # Postgresql
 def mulaisql() -> scoped_session:

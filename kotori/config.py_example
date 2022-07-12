@@ -10,3 +10,4 @@ class Config(object):
 	use_ssl = False
 	ssl_cert = "ssl/ssl_cert.pem"
 	ssl_key = "ssl/ssl_key.key"
+	enable_ipv6 = False

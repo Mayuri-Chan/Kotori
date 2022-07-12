@@ -3,7 +3,7 @@ import kotori
 import os
 
 from bottle import route, run, response, ServerAdapter, static_file
-from kotori import chat_url, ssl_cert, ssl_key, use_ssl
+from kotori import chat_url, ssl_cert, ssl_key, use_ssl, enable_ipv6
 from kotori.web_modules import ALL_MODULES
 
 IMPORTED = {}
@@ -58,4 +58,7 @@ print(" Thanks for using my bot :)")
 print()
 
 if __name__ == "__main__":
-	run(host='0.0.0.0', port=os.environ.get('PORT', '5000'), server=CherootAdapter)
+	if enable_ipv6:
+		run(host='::', port=os.environ('PORT', '5000'), server=CherootAdapter)
+	else:
+		run(host='0.0.0.0', port=os.environ.get('PORT', '5000'), server=CherootAdapter)
